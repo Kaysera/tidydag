@@ -1,0 +1,21 @@
+version: "3"
+
+tasks:
+  # Default task that lists available tasks
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  test:run:
+    desc: Run the project tests
+    cmds:
+      - uv run pytest -vsx
+
+  deps:install:
+    desc: Create virtual environment and sync Python dependencies
+    cmds:
+      - uv venv --clear {{.VENV}}
+      - uv sync --all-groups
+      - uv run pre-commit install --hook-type pre-commit
+      - npm install

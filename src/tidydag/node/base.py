@@ -8,6 +8,9 @@ from typing import TypeVar
 StateT = TypeVar("StateT", default=None)
 """Type variable for the state in a graph."""
 
+DepsT = TypeVar("DepsT", default=None)
+"""Type variable for the dependencies in a graph."""
+
 
 @dataclass(kw_only=True)
 class OrchestratorContext:
@@ -15,6 +18,9 @@ class OrchestratorContext:
 
     state: StateT
     """The state of the graph."""
+
+    deps: DepsT
+    """The dependencies of the graph."""
 
 
 @dataclass

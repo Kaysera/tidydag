@@ -19,24 +19,44 @@ class OrchestratorContext:
 
 @dataclass
 class NodeState:
+    """The state of a node after execution."""
+
     success: bool
+    """Whether the node execution was successful."""
     reason: str | None = None
+    """The reason for failure, if any."""
 
 
 @dataclass
 class SuccessState(NodeState):
+    """A successful state for a node."""
+
     success: bool = True
-    reason: None = None
 
 
 class ErrorState(NodeState):
+    """An error state for a node."""
+
     def __init__(self, reason: str):
+        """Initialize the error state.
+
+        Args:
+            reason: The reason for the failure.
+        """
         self.success = False
         self.reason = reason
 
 
 class Node(ABC):
+    """Base class for a Node"""
+
     def __init__(self, name: str | None = None, parents: Node | Iterable[Node] | None = None):
+        """Initialize the node.
+
+        Args:
+            name: The name of the node.
+            parents: The parents of the node. Set to None if the node has no parents
+        """
         self.parents = self._verify_parents(parents)
         self.name = name
 
@@ -52,4 +72,12 @@ class Node(ABC):
 
     @abstractmethod
     async def execute(self, ctx: OrchestratorContext) -> NodeState:
+        """Execute the node.
+
+        Args:
+            ctx: The context for the graph.
+
+        Returns:
+            The state of the node after execution.
+        """
         raise NotImplementedError

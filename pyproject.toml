@@ -13,6 +13,17 @@ dependencies = [
   "pytest-asyncio>=1.3.0",
 ]
 
+[dependency-groups]
+# 🛠 Development dependencies (formatting, linting, testing)
+dev = [
+  "coverage-badge",  # Generates coverage badges for documentation
+  "pre-commit",  # Git hooks framework for code quality checks
+  "pytest",  # Testing framework
+  "pytest-cov",  # Code coverage plugin for pytest
+  "pytest-xdist",  # Distributed testing plugin for pytest
+  "ruff",  # Fast Python linter and formatter
+]
+
 [build-system]
 requires = ["uv_build>=0.8.17,<0.9.0"]
 build-backend = "uv_build"

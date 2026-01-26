@@ -6,19 +6,41 @@ from tidydag.node.base import Node, OrchestratorContext, StateT
 
 
 class Orchestrator:
-    def __init__(self, step=0.1):
+    """An orchestrator for a graph."""
+
+    def __init__(self, step: float = 0.1):
+        """Initialize the orchestrator.
+
+        Args:
+            step: Time to wait between checks for the next ready node.
+        """
         self.sorter = TopologicalSorter()
         self.step = step
         self.loop = get_event_loop()
         self.stop = False
 
     def add_node(self, node: Node):
+        """Add a node to the orchestrator.
+
+        Args:
+            node: The node to add.
+        """
         self.sorter.add(node, *node.parents)
 
     def run_sync(self, state: StateT = None):
+        """Run the orchestrator synchronously.
+
+        Args:
+            state: The state of the graph.
+        """
         self.loop.run_until_complete(self.run(state))
 
     async def run(self, state: StateT = None):
+        """Run the orchestrator.
+
+        Args:
+            state: The state of the graph.
+        """
         ctx = OrchestratorContext(state=state)
         self.sorter.prepare()
         while self.sorter and not self.stop:

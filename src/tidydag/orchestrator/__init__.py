@@ -1,8 +1,9 @@
 import asyncio
+from collections.abc import AsyncIterator
 from graphlib import TopologicalSorter
 
 from tidydag._utils import get_event_loop
-from tidydag.node.base import Node, OrchestratorContext, StateT
+from tidydag.node.base import DepsT, Node, OrchestratorContext, StateT
 
 
 class Orchestrator:
@@ -27,21 +28,20 @@ class Orchestrator:
         """
         self.sorter.add(node, *node.parents)
 
-    def run_sync(self, state: StateT = None):
+    def run_sync(self, state: StateT = None, deps: DepsT = None):
         """Run the orchestrator synchronously.
 
         Args:
             state: The state of the graph.
         """
-        self.loop.run_until_complete(self.run(state))
+        self.loop.run_until_complete(self.run(state, deps))
 
-    async def run(self, state: StateT = None):
-        """Run the orchestrator.
+    async def iterate(self) -> AsyncIterator[tuple[Node, ...]]:
+        """Iterate over the nodes in the graph as they become ready.
 
-        Args:
-            state: The state of the graph.
+        Yields:
+            A list of nodes that are ready to be executed.
         """
-        ctx = OrchestratorContext(state=state)
         self.sorter.prepare()
         while self.sorter and not self.stop:
             node_group = self.sorter.get_ready()
@@ -49,8 +49,18 @@ class Orchestrator:
             if not node_group:
                 await asyncio.sleep(self.step)
             else:
-                for node in node_group:
-                    self.loop.create_task(self._visit(node, ctx, self.sorter))
+                yield node_group
+
+    async def run(self, state: StateT = None, deps: DepsT = None):
+        """Run the orchestrator.
+
+        Args:
+            state: The state of the graph.
+        """
+        ctx = OrchestratorContext(state=state, deps=deps)
+        async for node_group in self.iterate():
+            for node in node_group:
+                self.loop.create_task(self._visit(node, ctx, self.sorter))
 
     async def _visit(self, node: Node, ctx: OrchestratorContext, sorter: TopologicalSorter):
         node_state = await node.execute(ctx)

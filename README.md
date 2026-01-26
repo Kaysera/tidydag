@@ -1,25 +1,73 @@
-# TidyDAG
+<p align="center">
+    <img src="https://avatars.githubusercontent.com/u/35530357?s=400&u=1e6ac5572e3786df64910b23007330e71a796d35&v=4" align="center" width="30%">
+</p>
+<p align="center"><h1 align="center">TidyDAG</h1></p>
+<p align="center">
+    <em>Lightweight, asynchronous Directed Acyclic Graph (DAG) orchestrator for Python.</em>
+</p>
 
-TidyDAG is a lightweight, asynchronous Directed Acyclic Graph (DAG) orchestrator for Python. It allows you to define complex task dependencies and execute them concurrently while maintaining a shared state.
+<p align="center">
+    <img src="https://img.shields.io/badge/Python-3776AB.svg?style=default&logo=Python&logoColor=white" alt="Python">
+    <img src="https://img.shields.io/badge/Pytest-0A9EDC.svg?style=default&logo=Pytest&logoColor=white" alt="Pytest">
+    <img src="https://img.shields.io/badge/Ruff-D37D44?style=default&logo=ruff&logoColor=white" alt="Ruff">
+    <img src="https://img.shields.io/badge/Taskfile-4d2a85?style=default" alt="Taskfile">
+    <img src="https://img.shields.io/badge/AWS%20CodeBuild-34495E?style=default&logo=aws-codebuild&logoColor=white" alt="AWS CodeBuild">
+    <img src="./docs/coverage.svg" alt="coverage">
+</p>
+<br>
 
-## Features
+TidyDAG allows you to define complex task dependencies and execute them concurrently while maintaining a shared state. Built on `asyncio`, it provides a simple API to resolve execution order automatically via topological sorting.
 
-- **Asynchronous Execution:** Built on `asyncio` for non-blocking task orchestration.
-- **Topological Sorting:** Automatically resolves execution order based on dependencies.
-- **Shared Context:** Pass and mutate state across your graph nodes seamlessly.
-- **Type Safety:** Built with modern Python 3.13+ features and comprehensive type hints.
-- **Simple API:** Define nodes and dependencies with minimal boilerplate.
+---
 
-## Installation
+## 📦 Features
 
-This project uses `uv` for dependency management.
+*   ⚡ **Asynchronous Execution:** Built on `asyncio` for non-blocking task orchestration.
+*   🔗 **Topological Sorting:** Automatically resolves execution order based on dependencies.
+*   🧠 **Shared Context:** Pass and mutate state across your graph nodes seamlessly.
+*   🛡️ **Type Safety:** Built with modern Python 3.13+ features and comprehensive type hints.
+*   🧩 **Simple API:** Define nodes and dependencies with minimal boilerplate.
+*   🤖 **Task Automation:** Managed with `uv`, `ruff`, and `Taskfile.yml`.
 
-```bash
-# Install dependencies
-uv sync
+---
+
+## 📁 Project Layout
+
+```text
+.
+├── src/                          # Core library source code
+│   └── tidydag/
+│       ├── context/              # Shared context management
+│       ├── node/                 # Base Node and state definitions
+│       └── orchestrator/         # DAG execution engine
+├── test/                         # Pytest-based test suite
+│   └── unit/
+├── AGENTS.md                     # Development guide for AI agents
+├── Taskfile.yml                  # Task automation
+├── pyproject.toml                # Python project config
+└── README.md
 ```
 
-## Core Concepts
+---
+
+## 🔧 Setup
+
+1.  **Install dependencies** (requires Python ≥ 3.13 and `uv`):
+
+    ```bash
+    task deps:install
+    ```
+
+2.  **Activate virtual environment**:
+
+    The `deps:install` task creates a `.venv` directory. To activate it, run:
+    ```bash
+    source .venv/bin/activate
+    ```
+
+---
+
+## 💡 Core Concepts
 
 ### 1. Node
 The basic building block of a DAG. Every task must inherit from the `Node` class and implement the `execute` method.
@@ -30,7 +78,9 @@ The engine that manages the execution of the graph. It ensures nodes are execute
 ### 3. OrchestratorContext
 A container for shared state that is passed to every node during execution.
 
-## Quick Start
+---
+
+## 🚀 Quick Start
 
 ### Defining Custom Nodes
 
@@ -78,47 +128,39 @@ orchestrator.run_sync(state=initial_state)
 print(f"Final state: {initial_state}")
 ```
 
-## Project Structure
+---
 
-```text
-.
-├── AGENTS.md           # Development guide for AI agents
-├── pyproject.toml      # Project configuration and dependencies
-├── README.md           # Project documentation
-├── src/
-│   └── tidydag/        # Core library source code
-│       ├── context/    # Shared context management
-│       ├── node/       # Base Node and state definitions
-│       └── orchestrator/ # DAG execution engine
-├── Taskfile.yml        # Automation tasks
-└── test/               # Test suite
-    └── unit/           # Unit tests
-```
+## 🧪 Testing
 
-## Development
-
-### Running Tests
-The project uses `pytest` and `pytest-asyncio` for testing.
+Run all tests with coverage:
 
 ```bash
-# Run all tests
-uv run pytest
-
-# Run with verbose output
 task test:run
 ```
 
-### Linting and Formatting
-We use `ruff` to maintain high code quality.
-
+To generate a coverage badge (`docs/coverage.svg`), run:
 ```bash
-# Check for linting issues
-uv run ruff check .
-
-# Format the code
-uv run ruff format .
+task test:run BADGE=true
 ```
 
-## License
+---
 
-[Add License Information Here]
+## ✨ Automation (Taskfile)
+
+Common commands available via `task`:
+
+```bash
+task                    # Show available tasks
+task deps:install       # Create venv and sync Python dependencies
+task test:run           # Run all tests with pytest
+task lint:check         # Run linters and formatters in check mode
+task lint:format        # Format code with ruff
+```
+
+---
+
+## 📄 License
+
+Proprietary — ©Taidy. All rights reserved.
+
+This project is intended for internal use only and may not be copied, distributed, or modified outside of authorized teams without written permission from Taidy.

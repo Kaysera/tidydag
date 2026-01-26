@@ -37,12 +37,10 @@ TidyDAG allows you to define complex task dependencies and execute them concurre
 .
 ├── src/                          # Core library source code
 │   └── tidydag/
-│       ├── context/              # Shared context management
 │       ├── node/                 # Base Node and state definitions
 │       └── orchestrator/         # DAG execution engine
 ├── test/                         # Pytest-based test suite
 │   └── unit/
-├── AGENTS.md                     # Development guide for AI agents
 ├── Taskfile.yml                  # Task automation
 ├── pyproject.toml                # Python project config
 └── README.md
@@ -56,13 +54,6 @@ TidyDAG allows you to define complex task dependencies and execute them concurre
 
     ```bash
     task deps:install
-    ```
-
-2.  **Activate virtual environment**:
-
-    The `deps:install` task creates a `.venv` directory. To activate it, run:
-    ```bash
-    source .venv/bin/activate
     ```
 
 ---

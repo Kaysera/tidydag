@@ -41,8 +41,8 @@ def test_orchestrator_state_mutation():
     class MockState:
         counter: int = 0
 
-    class MockNode(Node):
-        async def execute(self, ctx: OrchestratorContext) -> NodeState:
+    class MockNode(Node[MockState]):
+        async def execute(self, ctx: OrchestratorContext[MockState]) -> NodeState:
             ctx.state.counter += 1
             return SuccessState()
 
@@ -51,7 +51,7 @@ def test_orchestrator_state_mutation():
     node_c = MockNode(name="c", parents=node_a)
     node_d = MockNode(name="d", parents=[node_b, node_c])
 
-    node_collection = [node_a, node_b, node_c, node_d]
+    node_collection: list[MockNode] = [node_a, node_b, node_c, node_d]
     random.shuffle(node_collection)
 
     orchestrator = Orchestrator()
@@ -69,8 +69,8 @@ def test_orchestrator_state_ordered_mutation():
     class MockState:
         flow: tuple = tuple([])
 
-    class MockNode(Node):
-        async def execute(self, ctx: OrchestratorContext) -> NodeState:
+    class MockNode(Node[MockState]):
+        async def execute(self, ctx: OrchestratorContext[MockState]) -> NodeState:
             ctx.state.flow = tuple([*ctx.state.flow, self.name])
             return SuccessState()
 
@@ -79,7 +79,7 @@ def test_orchestrator_state_ordered_mutation():
     node_c = MockNode(name="c", parents=node_a)
     node_d = MockNode(name="d", parents=[node_b, node_c])
 
-    node_collection = [node_a, node_b, node_c, node_d]
+    node_collection: list[MockNode] = [node_a, node_b, node_c, node_d]
     random.shuffle(node_collection)
 
     orchestrator = Orchestrator()
@@ -102,12 +102,12 @@ def test_orchestrator_fail():
     class MockState:
         flow: tuple = tuple([])
 
-    class MockNode(Node):
+    class MockNode(Node[MockState]):
         def __init__(self, name, parents=None, fail=False):
             self.fail = fail
             super().__init__(name, parents)
 
-        async def execute(self, ctx: OrchestratorContext) -> NodeState:
+        async def execute(self, ctx: OrchestratorContext[MockState]) -> NodeState:
             ctx.state.flow = tuple([*ctx.state.flow, self.name])
             if self.fail:
                 return ErrorState("Triggered Error")
@@ -118,7 +118,7 @@ def test_orchestrator_fail():
     node_c = MockNode(name="c", parents=node_a, fail=True)
     node_d = MockNode(name="d", parents=[node_b, node_c])
 
-    node_collection = [node_a, node_b, node_c, node_d]
+    node_collection: list[MockNode] = [node_a, node_b, node_c, node_d]
     random.shuffle(node_collection)
 
     orchestrator = Orchestrator()

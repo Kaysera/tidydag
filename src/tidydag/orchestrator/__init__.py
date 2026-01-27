@@ -3,12 +3,12 @@ from collections.abc import AsyncIterator
 from graphlib import TopologicalSorter
 
 from .._utils import get_event_loop
-from ..node.base import DepsT, Node, OrchestratorContext, StateT
+from ..node.base import Node, OrchestratorContext
 
 __all__ = "Orchestrator"
 
 
-class Orchestrator:
+class Orchestrator[StateT, DepsT]:
     """An orchestrator for a graph."""
 
     def __init__(self, step: float = 0.1):
@@ -22,7 +22,7 @@ class Orchestrator:
         self.loop = get_event_loop()
         self.stop = False
 
-    def add_node(self, node: Node):
+    def add_node(self, node: Node[StateT, DepsT]):
         """Add a node to the orchestrator.
 
         Args:
@@ -38,7 +38,7 @@ class Orchestrator:
         """
         self.loop.run_until_complete(self.run(state, deps))
 
-    async def iterate(self) -> AsyncIterator[tuple[Node, ...]]:
+    async def iterate(self) -> AsyncIterator[tuple[Node[StateT, DepsT], ...]]:
         """Iterate over the nodes in the graph as they become ready.
 
         Yields:
@@ -47,7 +47,7 @@ class Orchestrator:
         self.sorter.prepare()
         while self.sorter and not self.stop:
             node_group = self.sorter.get_ready()
-
+            # node_group = cast(tuple[Node[StateT, DepsT], ...], self.sorter.get_ready())
             if not node_group:
                 await asyncio.sleep(self.step)
             else:
@@ -64,7 +64,9 @@ class Orchestrator:
             for node in node_group:
                 self.loop.create_task(self._visit(node, ctx, self.sorter))
 
-    async def _visit(self, node: Node, ctx: OrchestratorContext, sorter: TopologicalSorter):
+    async def _visit(
+        self, node: Node[StateT, DepsT], ctx: OrchestratorContext[StateT, DepsT], sorter: TopologicalSorter
+    ):
         node_state = await node.execute(ctx)
         if not node_state.success:
             print(f"Error in node {node.name} , reason: {node_state.reason}")

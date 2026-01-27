@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import Generic, TypeVar
 
 StateT = TypeVar("StateT", default=None)
 """Type variable for the state in a graph."""
@@ -13,7 +13,7 @@ DepsT = TypeVar("DepsT", default=None)
 
 
 @dataclass(kw_only=True)
-class OrchestratorContext:
+class OrchestratorContext(Generic[StateT, DepsT]):
     """Context for a graph."""
 
     state: StateT
@@ -53,10 +53,14 @@ class ErrorState(NodeState):
         self.reason = reason
 
 
-class Node(ABC):
+class Node(ABC, Generic[StateT, DepsT]):
     """Base class for a Node"""
 
-    def __init__(self, name: str | None = None, parents: Node | Iterable[Node] | None = None):
+    def __init__(
+        self,
+        name: str | None = None,
+        parents: Node[StateT, DepsT] | Iterable[Node[StateT, DepsT]] | None = None,
+    ):
         """Initialize the node.
 
         Args:
@@ -66,7 +70,7 @@ class Node(ABC):
         self.parents = self._verify_parents(parents)
         self.name = name
 
-    def _verify_parents(self, parents: Node | Iterable[Node] | None):
+    def _verify_parents(self, parents: Node[StateT, DepsT] | Iterable[Node[StateT, DepsT]] | None = None):
         if parents is None:
             return tuple([])
         elif isinstance(parents, Node):
@@ -77,7 +81,7 @@ class Node(ABC):
             raise ValueError("Parents must be a Node or Iterable")
 
     @abstractmethod
-    async def execute(self, ctx: OrchestratorContext) -> NodeState:
+    async def execute(self, ctx: OrchestratorContext[StateT, DepsT]) -> NodeState:
         """Execute the node.
 
         Args:

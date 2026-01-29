@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -69,6 +70,7 @@ class Node(ABC, Generic[StateT, DepsT]):
         """
         self.parents = self._verify_parents(parents)
         self.name = name
+        self.id = uuid.uuid4()
 
     def _verify_parents(self, parents: Node[StateT, DepsT] | Iterable[Node[StateT, DepsT]] | None = None):
         if parents is None:

@@ -84,7 +84,7 @@ class Node(ABC, Generic[StateT, DepsT]):
             return tuple([])
         elif isinstance(parents, Node):
             return tuple([parents])
-        elif isinstance(parents, Iterable):
+        elif isinstance(parents, Iterable) and not isinstance(parents, (str, bytes)):
             return tuple(parents)
         else:
             raise ValueError("Parents must be a Node or Iterable")

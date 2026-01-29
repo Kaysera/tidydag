@@ -11,7 +11,11 @@ __all__ = "Orchestrator"
 class Orchestrator[StateT, DepsT]:
     """An orchestrator for a graph."""
 
-    def __init__(self, step: float = 0.1, ctx: OrchestratorContext[StateT, DepsT] | None = None):
+    def __init__(
+        self,
+        ctx: OrchestratorContext[StateT, DepsT] | None = None,
+        step: float = 0.1,
+    ):
         """Initialize the orchestrator.
 
         Args:
@@ -85,9 +89,17 @@ class Orchestrator[StateT, DepsT]:
         ctx: OrchestratorContext[StateT, DepsT],
         sorter: TopologicalSorter,
     ):
+        if node.id in ctx.metadata.executed:
+            sorter.done(node)
+            return True
+
         node_state = await node.execute(ctx)
-        if not node_state.success:
+
+        if node_state.success:
+            ctx.metadata.executed.add(node.id)
+        else:
             print(f"Error in node {node.name} , reason: {node_state.reason}")
             self.stop = True
-        ctx.metadata.executed.add(node.id)
+
         sorter.done(node)
+        return True

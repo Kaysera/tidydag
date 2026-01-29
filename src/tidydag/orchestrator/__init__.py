@@ -96,10 +96,17 @@ class Orchestrator[StateT, DepsT]:
         node_state = await node.execute(ctx)
 
         if node_state.success:
-            ctx.metadata.executed.add(node.id)
+            self._checkpoint(node, ctx)
         else:
             print(f"Error in node {node.name} , reason: {node_state.reason}")
             self.stop = True
 
         sorter.done(node)
         return True
+
+    def _checkpoint(
+        self,
+        node: Node[StateT, DepsT],
+        ctx: OrchestratorContext[StateT, DepsT],
+    ):
+        ctx.metadata.executed.add(node.id)

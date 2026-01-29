@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Generic, TypeVar
 
 StateT = TypeVar("StateT", default=None)
@@ -11,6 +10,11 @@ StateT = TypeVar("StateT", default=None)
 
 DepsT = TypeVar("DepsT", default=None)
 """Type variable for the dependencies in a graph."""
+
+
+@dataclass
+class OrchestratorMetadata:
+    executed: set[int] = field(default_factory=set)
 
 
 @dataclass(kw_only=True)
@@ -22,6 +26,9 @@ class OrchestratorContext(Generic[StateT, DepsT]):
 
     deps: DepsT
     """The dependencies of the graph."""
+
+    metadata: OrchestratorMetadata = field(default_factory=OrchestratorMetadata)
+    """The metadata of the execution of the graph"""
 
 
 @dataclass
@@ -70,7 +77,7 @@ class Node(ABC, Generic[StateT, DepsT]):
         """
         self.parents = self._verify_parents(parents)
         self.name = name
-        self.id = uuid.uuid4()
+        self.id: int = None
 
     def _verify_parents(self, parents: Node[StateT, DepsT] | Iterable[Node[StateT, DepsT]] | None = None):
         if parents is None:

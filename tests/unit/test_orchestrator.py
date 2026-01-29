@@ -133,3 +133,32 @@ def test_orchestrator_fail():
     assert flow_dict["a"] < flow_dict["c"]
 
     assert "d" not in flow_dict
+
+
+def test_orchestrator_checkpoint():
+    @dataclass
+    class MockState:
+        flow: tuple = tuple([])
+
+    class MockNode(Node[MockState]):
+        async def execute(self, ctx: OrchestratorContext[MockState]) -> NodeState:
+            ctx.state.flow = tuple([*ctx.state.flow, self.name])
+            return SuccessState()
+
+    node_a = MockNode(name="a")
+    node_b = MockNode(name="b", parents=node_a)
+    node_c = MockNode(name="c", parents=node_a)
+    node_d = MockNode(name="d", parents=[node_b, node_c])
+
+    node_collection: list[MockNode] = [node_a, node_b, node_c, node_d]
+    random.shuffle(node_collection)
+
+    orchestrator = Orchestrator()
+    for node in node_collection:
+        orchestrator.add_node(node)
+
+    state = MockState()
+    orchestrator.run_sync(state=state)
+
+    for node in node_collection:
+        assert node.id in orchestrator.ctx.metadata.executed

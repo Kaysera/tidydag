@@ -25,8 +25,9 @@ def test_orchestrator_order():
     for node in node_collection:
         orchestrator.add_node(node)
 
-    orchestrator.run_sync()
-
+    result = orchestrator.run_sync()
+    assert result.success
+    assert result.last_node.name == "d"
     flow_dict = {name: i for i, name in enumerate(flow)}
 
     assert flow_dict["a"] < flow_dict["b"]
@@ -126,7 +127,10 @@ def test_orchestrator_fail():
         orchestrator.add_node(node)
 
     state = MockState()
-    orchestrator.run_sync(state=state)
+    result = orchestrator.run_sync(state=state)
+    assert not result.success
+    assert result.last_node.name == "c"
+
     flow_dict = {name: i for i, name in enumerate(state.flow)}
 
     assert flow_dict["a"] < flow_dict["b"]

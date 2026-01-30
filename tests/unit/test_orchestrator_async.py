@@ -37,8 +37,10 @@ async def test_orchestrator_order():
     for node in node_collection:
         orchestrator.add_node(node)
 
-    await orchestrator.run()
+    result = await orchestrator.run()
 
+    assert result.success
+    assert result.last_node.name == "d"
     flow_dict = {name: i for i, name in enumerate(flow)}
 
     assert flow_dict["a"] < flow_dict["b"]
@@ -50,7 +52,7 @@ async def test_orchestrator_order():
 
 
 @pytest.mark.asyncio
-def test_orchestrator_fail():
+async def test_orchestrator_fail():
     @dataclass
     class MockState:
         flow: tuple = tuple([])
@@ -79,7 +81,9 @@ def test_orchestrator_fail():
         orchestrator.add_node(node)
 
     state = MockState()
-    orchestrator.run_sync(state=state)
+    result = await orchestrator.run(state=state)
+    assert not result.success
+    assert result.reason == "Triggered Error"
     flow_dict = {name: i for i, name in enumerate(state.flow)}
 
     assert flow_dict["a"] < flow_dict["b"]

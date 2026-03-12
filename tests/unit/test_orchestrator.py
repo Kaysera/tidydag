@@ -1,4 +1,5 @@
 import random
+import time
 from dataclasses import dataclass
 
 from tidydag.node.base import ErrorState, Node, NodeState, OrchestratorContext, SuccessState
@@ -27,7 +28,6 @@ def test_orchestrator_order():
 
     result = orchestrator.run_sync()
     assert result.success
-    assert result.last_node.name == "d"
     flow_dict = {name: i for i, name in enumerate(flow)}
 
     assert flow_dict["a"] < flow_dict["b"]
@@ -129,7 +129,7 @@ def test_orchestrator_fail():
     state = MockState()
     result = orchestrator.run_sync(state=state)
     assert not result.success
-    assert result.last_node.name == "c"
+    assert result.failed_node.name == "c"
 
     flow_dict = {name: i for i, name in enumerate(state.flow)}
 
@@ -265,3 +265,36 @@ def test_orchestrator_resume_checkpoint():
 
     # Check that all executions are there and none duplicated
     assert len(executions) == 4
+
+
+def test_orchestrator_profile():
+
+    @dataclass
+    class MockProfile:
+        duration_ns: float
+
+    class MockNode(Node):
+        async def execute(self, ctx):
+            time.sleep(0.1)
+            return SuccessState()
+
+        def profile(self, ctx, state, start_ns):
+            end_ns = time.perf_counter_ns()
+            return MockProfile(duration_ns=end_ns - start_ns)
+
+    node_a = MockNode(name="a")
+    node_b = MockNode(name="b", parents=node_a)
+    node_c = MockNode(name="c", parents=node_a)
+    node_d = MockNode(name="d", parents=[node_b, node_c])
+
+    node_collection = [node_a, node_b, node_c, node_d]
+    random.shuffle(node_collection)
+
+    orchestrator = Orchestrator()
+    for node in node_collection:
+        orchestrator.add_node(node)
+
+    result = orchestrator.run_sync()
+    assert result.success
+    for node_profile in result.ctx.metadata.profile.values():
+        assert 0.1 * 1e9 < node_profile.duration_ns < 0.11 * 1e9

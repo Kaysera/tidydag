@@ -40,7 +40,6 @@ async def test_orchestrator_order():
     result = await orchestrator.run()
 
     assert result.success
-    assert result.last_node.name == "d"
     flow_dict = {name: i for i, name in enumerate(flow)}
 
     assert flow_dict["a"] < flow_dict["b"]

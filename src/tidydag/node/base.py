@@ -11,14 +11,18 @@ StateT = TypeVar("StateT", default=None)
 DepsT = TypeVar("DepsT", default=None)
 """Type variable for the dependencies in a graph."""
 
+ProfileT = TypeVar("ProfileT", default=None)
+"""Type variable for the dependencies in a graph."""
+
 
 @dataclass
-class OrchestratorMetadata:
+class OrchestratorMetadata[ProfileT]:
     executed: set[int] = field(default_factory=set)
+    profile: dict[int, ProfileT] = field(default_factory=dict)
 
 
 @dataclass(kw_only=True)
-class OrchestratorContext(Generic[StateT, DepsT]):
+class OrchestratorContext(Generic[StateT, DepsT, ProfileT]):
     """Context for a graph."""
 
     state: StateT
@@ -27,7 +31,7 @@ class OrchestratorContext(Generic[StateT, DepsT]):
     deps: DepsT
     """The dependencies of the graph."""
 
-    metadata: OrchestratorMetadata = field(default_factory=OrchestratorMetadata)
+    metadata: OrchestratorMetadata[ProfileT] = field(default_factory=OrchestratorMetadata[ProfileT])
     """The metadata of the execution of the graph"""
 
 
@@ -61,13 +65,13 @@ class ErrorState(NodeState):
         self.reason = reason
 
 
-class Node(ABC, Generic[StateT, DepsT]):
+class Node(ABC, Generic[StateT, DepsT, ProfileT]):
     """Base class for a Node"""
 
     def __init__(
         self,
         name: str | None = None,
-        parents: Node[StateT, DepsT] | Iterable[Node[StateT, DepsT]] | None = None,
+        parents: Node[StateT, DepsT, ProfileT] | Iterable[Node[StateT, DepsT, ProfileT]] | None = None,
     ):
         """Initialize the node.
 
@@ -79,7 +83,9 @@ class Node(ABC, Generic[StateT, DepsT]):
         self.name = name
         self.id: int = None
 
-    def _verify_parents(self, parents: Node[StateT, DepsT] | Iterable[Node[StateT, DepsT]] | None = None):
+    def _verify_parents(
+        self, parents: Node[StateT, DepsT, ProfileT] | Iterable[Node[StateT, DepsT, ProfileT]] | None = None
+    ):
         if parents is None:
             return tuple([])
         elif isinstance(parents, Node):
@@ -90,7 +96,7 @@ class Node(ABC, Generic[StateT, DepsT]):
             raise ValueError("Parents must be a Node or Iterable")
 
     @abstractmethod
-    async def execute(self, ctx: OrchestratorContext[StateT, DepsT]) -> NodeState:
+    async def execute(self, ctx: OrchestratorContext[StateT, DepsT, ProfileT]) -> NodeState:
         """Execute the node.
 
         Args:
@@ -100,3 +106,18 @@ class Node(ABC, Generic[StateT, DepsT]):
             The state of the node after execution.
         """
         raise NotImplementedError
+
+    def profile(
+        self, ctx: OrchestratorContext[StateT, DepsT, ProfileT], state: NodeState, start_ns: float
+    ) -> ProfileT:
+        """Compute the necessary elements for the node profile
+
+        Args:
+            ctx: The context for the graph.
+            state: The node state upon execution
+            start_ns: The time of the node execution start in milliseconds
+
+        Returns:
+            The node profile
+        """
+        pass

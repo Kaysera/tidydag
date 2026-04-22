@@ -2,6 +2,7 @@ import asyncio
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from graphlib import TopologicalSorter
+from typing import Any
 
 from .._utils import get_event_loop
 from ..node.base import Node, OrchestratorContext
@@ -14,7 +15,7 @@ class OrchestratorExecution[StateT, DepsT]:
     ctx: OrchestratorContext[StateT, DepsT]
     success: bool
     reason: str | None = None
-    last_node: Node[StateT, DepsT] | None = None
+    last_node: Node[Any, StateT, DepsT] | None = None
 
 
 class Orchestrator[StateT, DepsT]:
@@ -38,7 +39,7 @@ class Orchestrator[StateT, DepsT]:
         self.ctx: OrchestratorContext[StateT, DepsT] = ctx
         self.execution: OrchestratorExecution = None
 
-    def add_node(self, node: Node[StateT, DepsT]):
+    def add_node(self, node: Node[Any, StateT, DepsT]):
         """Add a node to the orchestrator.
 
         Args:
@@ -54,7 +55,7 @@ class Orchestrator[StateT, DepsT]:
         """
         return self.loop.run_until_complete(self.run(state, deps))
 
-    async def iterate(self) -> AsyncIterator[list[tuple[int, Node[StateT, DepsT]]]]:
+    async def iterate(self) -> AsyncIterator[list[tuple[int, Node[Any, StateT, DepsT]]]]:
         """Iterate over the nodes in the graph as they become ready.
 
         Yields:
@@ -104,7 +105,7 @@ class Orchestrator[StateT, DepsT]:
 
     async def _visit(
         self,
-        node: Node[StateT, DepsT],
+        node: Node[Any, StateT, DepsT],
     ):
         if node.id in self.ctx.metadata.executed:
             self.sorter.done(node)
@@ -126,7 +127,7 @@ class Orchestrator[StateT, DepsT]:
 
     def _checkpoint(
         self,
-        node: Node[StateT, DepsT],
+        node: Node[Any, StateT, DepsT],
         ctx: OrchestratorContext[StateT, DepsT],
     ):
         ctx.metadata.executed.add(node.id)

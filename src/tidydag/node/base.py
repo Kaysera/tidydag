@@ -3,13 +3,30 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Generic, TypeVar
+from pathlib import Path
+from typing import Any, Generic, Self, TypeVar
+
+import yaml
+from pydantic import BaseModel
 
 StateT = TypeVar("StateT", default=None)
 """Type variable for the state in a graph."""
 
 DepsT = TypeVar("DepsT", default=None)
 """Type variable for the dependencies in a graph."""
+
+ConfigT = TypeVar("ConfigT", bound="Configuration", default="Configuration")
+"""Type variable for the configuration of a node"""
+
+
+class Configuration(BaseModel):
+    """Base class for node configuration. Subclass and define fields."""
+
+    @classmethod
+    def from_yaml(cls, path: str | Path) -> Self:
+        with open(path) as f:
+            data = yaml.safe_load(f)
+        return cls.model_validate(data)
 
 
 @dataclass
@@ -61,13 +78,14 @@ class ErrorState(NodeState):
         self.reason = reason
 
 
-class Node(ABC, Generic[StateT, DepsT]):
+class Node(ABC, Generic[ConfigT, StateT, DepsT]):
     """Base class for a Node"""
 
     def __init__(
         self,
         name: str | None = None,
-        parents: Node[StateT, DepsT] | Iterable[Node[StateT, DepsT]] | None = None,
+        parents: Node[Any, StateT, DepsT] | Iterable[Node[Any, StateT, DepsT]] | None = None,
+        config: ConfigT | None = None,
     ):
         """Initialize the node.
 
@@ -77,9 +95,12 @@ class Node(ABC, Generic[StateT, DepsT]):
         """
         self.parents = self._verify_parents(parents)
         self.name = name
+        self.config: ConfigT = config
         self.id: int = None
 
-    def _verify_parents(self, parents: Node[StateT, DepsT] | Iterable[Node[StateT, DepsT]] | None = None):
+    def _verify_parents(
+        self, parents: Node[Any, StateT, DepsT] | Iterable[Node[Any, StateT, DepsT]] | None = None
+    ):
         if parents is None:
             return tuple([])
         elif isinstance(parents, Node):

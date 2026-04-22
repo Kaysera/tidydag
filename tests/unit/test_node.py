@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import pytest
 
 from tidydag import Node
@@ -23,3 +25,18 @@ def test_wrong_parent():
 
     with pytest.raises(ValueError):
         MockNode(name="node1", parents="Invalid parent")
+
+
+def test_node_config():
+    @dataclass
+    class MockConfig:
+        version: int
+
+    class MockNode(Node[MockConfig]):
+        async def execute(self, ctx):
+            pass
+
+    config = MockConfig(version=3)
+    node = MockNode(config=config)
+
+    assert node.config.version == 3

@@ -1,0 +1,4 @@
+name: myapp
+database:
+  url: postgres://localhost/db
+  pool_size: 5

@@ -39,4 +39,5 @@ jobs:
         run: |
           uv publish \
             --publish-url https://pypi.pkg.github.com/${{ github.repository_owner }}/ \
-            --token ${{ secrets.GITHUB_TOKEN }}
+            --username ${{ github.repository_owner }} \
+            --password ${{ secrets.GITHUB_TOKEN }}

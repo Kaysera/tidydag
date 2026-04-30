@@ -66,3 +66,40 @@ tasks:
     cmds:
       - uv run ruff format
       - uv run ruff check --fix
+
+  # ------------------------------
+  # 🚀 Release
+  # ------------------------------
+  release:
+    desc: "Tag and push a release if pyproject.toml version differs from the latest git tag"
+    silent: true
+    cmds:
+      - |
+        LATEST_TAG=$(git tag --list "v*" --sort=-version:refname | head -n1)
+        PKG_VERSION=$(grep -m1 '^version' pyproject.toml | sed 's/.*= *"\(.*\)"/\1/')
+        TAG_VERSION="v${PKG_VERSION}"
+
+        if [ -z "$LATEST_TAG" ]; then
+          echo "No existing tags found. Current version: $TAG_VERSION"
+        else
+          echo "Latest tag:      $LATEST_TAG"
+          echo "pyproject.toml:  $TAG_VERSION"
+        fi
+
+        if [ "$LATEST_TAG" = "$TAG_VERSION" ]; then
+          echo "✅ Already up to date — nothing to release."
+          exit 0
+        fi
+
+        printf "Release %s? [y/N] " "$TAG_VERSION"
+        read REPLY
+        case "$REPLY" in
+          [yY]|[yY][eE][sS])
+            git tag "$TAG_VERSION"
+            git push origin "$TAG_VERSION"
+            echo "🚀 Released $TAG_VERSION"
+            ;;
+          *)
+            echo "Aborted."
+            ;;
+        esac
